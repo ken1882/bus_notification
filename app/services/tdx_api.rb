@@ -1,7 +1,6 @@
 require 'mechanize'
 require 'brotli'
 require 'json'
-require 'redis-lock'
 
 class TdxApi < Mechanize
   include RequestsHelper
@@ -21,26 +20,47 @@ class TdxApi < Mechanize
     '$format' => 'JSON'
   }
   
+  AUTH_ENABLED = !!ENV['TDX_CLIENT_ID']
+
   # shared cached token for workers
-  CACHE_TOKEN_KEY = 'TDX_AUTH_TOKEN'
+  CACHE_TOKEN_KEY = 'tdx_auth_token'
+  CACHE_LOCK_KEY  = 'tdx_auth_lock'
+  CACHE_LOCK_TTL  = 60_000 # 1min
 
   def initialize
     super
     self.request_headers = DEFALT_HTTP_HEADERS.dup
+    self.sync_auth_token
+  end
+
+  def change_token(token)
+    if token
+      self.request_headers['authorization'] = "Bearer #{token}"
+    else
+      self.request_headers.delete 'authorization'
+    end
   end
 
   # Sync token between workers, get new one if unavailable
   def sync_auth_token
-    token = Redis.current.get(CACHE_TOKEN_KEY)
-    return token if token
-    Redis.current.lock(CACHE_TOKEN_KEY, life: 30) do
-      token = Redis.current.get(CACHE_TOKEN_KEY)
-      return token if token
-      response = get_auth_token(ENV['TDX_CLIENT_ID'], ENV['TDX_CLIENT_SECRET'])
-      token = response['access_token']
-      ttl = response['expires_in'] - 30
-      Redis.current.set(CACHE_TOKEN_KEY, token, ex: ttl)
+    return false unless AUTH_ENABLED
+    token = $redis.get(CACHE_TOKEN_KEY)
+    return change_token(token) if token
+    $redlock.lock(CACHE_LOCK_KEY, CACHE_LOCK_TTL) do |locked|
+      if locked
+        begin
+          response = get_auth_token(ENV['TDX_CLIENT_ID'], ENV['TDX_CLIENT_SECRET'])
+          token = response['access_token']
+          ttl = response['expires_in'] - 30
+          $redis.set(CACHE_TOKEN_KEY, token, ex: ttl)
+        ensure
+          $redlock.unlock(locked) if locked
+        end
+      else
+        sleep 0.1 until token = $redis.get(CACHE_TOKEN_KEY)
+      end
     end
+    return change_token(token)
   end
 
   # Will return parsed json response if success, otherwise `false`
@@ -60,10 +80,15 @@ class TdxApi < Mechanize
     )
     self.request_headers = ori_headers
     begin
+      File.open('log/tmp.log') do |fp|
+        fp.write("Response:\n#{response.body}") rescue nil
+        fp.write("Response:\n#{response.page}") rescue nil
+      end
       return JSON.parse(response.content)
     rescue Exception => e
       Rails.logger.error("Error processing auth (#{e}).Response:\n#{response}")
     end
+    Rails.logger.warn("Failed to get TDX auth token.Response:\n#{response}")
     return false
   end
 
@@ -73,15 +98,15 @@ class TdxApi < Mechanize
     fallback = Proc.new do |e, depth|
       Rails.logger.error(sprintf(retry_msg, e.class.name, e.message, depth))
       # use auth token if exists, otherwise proxy
-      auth_ok = self.sync_auth_token if self.request_headers['authorization']
+      auth_ok = self.sync_auth_token
       if !auth_ok
-        self.request_headers.delete 'authorization'
+        self.change_token(nil)
         WildProxy.next_proxy(self) # no sensitive data so should be fine
       end
     end
     # add url-safe odata query string
     odata_params = kwargs.delete(:odata) || DEFALT_ODATA_PARAM
-    URI.method(:encode_uri_component).tap do |m|
+    URI.method(:encode_www_form_component).tap do |m|
       args[0] += '?' + odata_params.map{|k,v| "#{m.call k}=#{m.call v}"}.join('&')
     end
     # return send result
@@ -89,11 +114,11 @@ class TdxApi < Mechanize
   end
 
   def get_city_routes(city)
-    response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/DisplayStopOfRoute/City/#{city}")
+    response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/Route/City/#{city}")
     return JSON.parse(response.content)
   end
 
-  def get_realtime_route(city, route_name)
+  def get_live_route(city, route_name)
     response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/EstimatedTimeOfArrival/City/#{city}/#{route_name}")
     return JSON.parse(response.content)
   end

@@ -41,6 +41,7 @@ module BusNotification
     config.time_zone = "Asia/Taipei"
     config.autoload_paths += %W(#{config.root}/app/services)
     config.wild_proxies = config_for(:wildproxies)
+    config.x.default_worker_cnt = 4
 
     # Only loads a smaller set of middleware suitable for API only apps.
     # Middleware like session, flash, cookies can be added back manually.

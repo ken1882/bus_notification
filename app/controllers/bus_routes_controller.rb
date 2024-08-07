@@ -7,9 +7,7 @@ class BusRoutesController < ApplicationController
   def show
     cache_key = "bus_routes_show_#{params[:city]}"
     @bus_route = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
-      # Make the API call to fetch bus route for the city
-      # move this to corn job and updates per hour
-      # https://tdx.transportdata.tw/api/basic/v2/Bus/DisplayStopOfRoute/City/#{city}?%24format=JSON
+      ret = TdxApi.new.get_city_routes city
     end
     render json: @bus_route
   end
@@ -18,11 +16,10 @@ class BusRoutesController < ApplicationController
   # get route status
   def route_show
     cache_key = "bus_routes_show_#{params[:city]}_#{params[:route_name]}"
-    @bus_route = Rails.cache.fetch(cache_key, expires_in: 1.minute) do
-      # Make the API call to fetch bus route for the city
-      # https://tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/City/#{city}/#{route_name}?%24format=JSON
+    @realtime_route = Rails.cache.fetch(cache_key, expires_in: 1.minute) do
+      ret = TdxApi.new.get_realtime_route params[:city], params[:route_name]
     end
-    render json: @bus_route
+    render json: @realtime_route
   end
 
 end

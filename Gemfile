@@ -1,12 +1,12 @@
 source "https://rubygems.org"
 
-ruby "3.2.4"
+ruby "3.1.2"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 7.1.3", ">= 7.1.3.4"
 
-# Use sqlite3 as the database for Active Record
-gem "sqlite3", "~> 1.4"
+# Use postgresql as the database for Active Record
+gem "pg"
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
@@ -15,8 +15,9 @@ gem "puma", ">= 5.0"
 # gem "jbuilder"
 
 gem "redis", ">= 4.0.1"
-gem "redis-lock"
+gem "redlock"
 gem "redis-rails"
+gem 'whenever', require: false
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
@@ -36,6 +37,7 @@ gem "bootsnap", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
+gem "resque"
 gem 'dotenv-rails'
 gem "mechanize"
 gem "brotli"

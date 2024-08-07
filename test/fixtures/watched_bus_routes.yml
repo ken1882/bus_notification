@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  email: MyString
+  city: MyString
+  route_id: MyString
+  route_name: MyString
+  direction: 1
+  alert_stop_id: MyString
+
+two:
+  email: MyString
+  city: MyString
+  route_id: MyString
+  route_name: MyString
+  direction: 1
+  alert_stop_id: MyString

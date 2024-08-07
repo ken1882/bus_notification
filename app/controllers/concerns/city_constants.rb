@@ -1,7 +1,7 @@
 module CityConstants
     extend ActiveSupport::Concern
     
-    Cities = %w(
+    CITIES = %w(
         NantouCounty
         Chiayi
         ChiayiCounty
