@@ -1,6 +1,7 @@
 require 'mechanize'
 require 'brotli'
 require 'json'
+require 'redis-lock'
 
 class TdxApi < Mechanize
   include RequestsHelper
@@ -19,37 +20,82 @@ class TdxApi < Mechanize
   DEFALT_ODATA_PARAM = {
     '$format' => 'JSON'
   }
+  
+  # shared cached token for workers
+  CACHE_TOKEN_KEY = 'TDX_AUTH_TOKEN'
 
   def initialize
     super
     self.request_headers = DEFALT_HTTP_HEADERS.dup
   end
 
+  # Sync token between workers, get new one if unavailable
+  def sync_auth_token
+    token = Redis.current.get(CACHE_TOKEN_KEY)
+    return token if token
+    Redis.current.lock(CACHE_TOKEN_KEY, life: 30) do
+      token = Redis.current.get(CACHE_TOKEN_KEY)
+      return token if token
+      response = get_auth_token(ENV['TDX_CLIENT_ID'], ENV['TDX_CLIENT_SECRET'])
+      token = response['access_token']
+      ttl = response['expires_in'] - 30
+      Redis.current.set(CACHE_TOKEN_KEY, token, ex: ttl)
+    end
+  end
+
+  # Will return parsed json response if success, otherwise `false`
+  def get_auth_token(app_id, app_key)
+    ori_headers = self.request_headers.dup
+    self.request_headers = {}
+    response = self.do_requests(
+      :post,
+      "#{HOST}/auth/realms/TDXConnect/protocol/openid-connect/token",
+      {
+        'content-type' => 'application/x-www-form-urlencoded',
+        'grant_type' => 'client_credentials',
+        'client_id' => app_id,
+        'client_secret' => app_key,
+      },
+      odata: {}
+    )
+    self.request_headers = ori_headers
+    begin
+      return JSON.parse(response.content)
+    rescue Exception => e
+      Rails.logger.error("Error processing auth (#{e}).Response:\n#{response}")
+    end
+    return false
+  end
+
   def do_requests(method, *args, **kwargs)
-    # swap proxy if failed (probably rate limited)
+    # failure callbacks
     retry_msg = "%s %s\nSwapping proxy and retrying...(depth=%d)"
     fallback = Proc.new do |e, depth|
       Rails.logger.error(sprintf(retry_msg, e.class.name, e.message, depth))
-      WildProxy.next_proxy(self)
+      # use auth token if exists, otherwise proxy
+      auth_ok = self.sync_auth_token if self.request_headers['authorization']
+      if !auth_ok
+        self.request_headers.delete 'authorization'
+        WildProxy.next_proxy(self) # no sensitive data so should be fine
+      end
     end
     # add url-safe odata query string
-    odata_params = DEFALT_ODATA_PARAM.merge(kwargs.delete(:odata) || {})
+    odata_params = kwargs.delete(:odata) || DEFALT_ODATA_PARAM
     URI.method(:encode_uri_component).tap do |m|
       args[0] += '?' + odata_params.map{|k,v| "#{m.call k}=#{m.call v}"}.join('&')
     end
-    # send requests
-    start_requests(fallback) do
-      self.send(method, *args, **kwargs)
-    end
+    # return send result
+    start_requests(fallback){ self.send(method, *args, **kwargs) }
   end
 
   def get_city_routes(city)
     response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/DisplayStopOfRoute/City/#{city}")
-    JSON.parse(response.content)
+    return JSON.parse(response.content)
   end
 
   def get_realtime_route(city, route_name)
     response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/EstimatedTimeOfArrival/City/#{city}/#{route_name}")
-    JSON.parse(response.content)
+    return JSON.parse(response.content)
   end
+
 end

@@ -2,8 +2,11 @@ require 'mechanize'
 require 'net/http'
 
 module RequestsHelper
+    RETRYABLE_CODES = [
+        429, 500, 502, 503, 504
+    ].freeze
+
     RETRYABLE_ERRORS = [
-        Mechanize::ResponseCodeError,
         Net::HTTP::Persistent::Error,
         OpenSSL::SSL::SSLError,
         Timeout::Error,
@@ -19,7 +22,14 @@ module RequestsHelper
         depth = 0
         begin
             yield # execute given block
+        rescue Mechanize::ResponseCodeError => e
+            depth += 1
+            return e if depth > retry_times
+            return e unless RETRYABLE_CODES.include? e.response_code
+            fallback_proc.call(e, depth)
+            retry
         rescue *RETRYABLE_ERRORS => e
+            @_last_error = e
             depth += 1
             raise if depth > retry_times
             fallback_proc.call(e, depth)
