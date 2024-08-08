@@ -8,6 +8,7 @@ Swagger api document available at `/swagger`
 
 ### Quick walkthrough
 * TDX token not needed as long as `wildproxies.yml` is adequately supplied.
+* Email verification and authentication not implemented (only simple format checks).
 * Route Data:
     * `GET /bus_routes` get list of available cities.
     * `GET /bus_routes/:city` get all available routes and stops of city.
