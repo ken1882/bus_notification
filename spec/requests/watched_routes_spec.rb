@@ -45,7 +45,19 @@ RSpec.describe 'watched_routes', type: :request do
     )
 
     post('Add watched route and stop') do
-      response(200, 'ok') do
+      response(200, 'already exists') do
+        schema type: :object, properties: {
+          email: { type: :string },
+          city: { type: :string },
+          route_id: { type: :string },
+          route_name: { type: :string },
+          direction: { type: :integer },
+          alert_stop_id: { type: :string },
+        }
+        run_test!
+      end
+
+      response(201, 'created') do
         schema type: :object, properties: {
           email: { type: :string },
           city: { type: :string },

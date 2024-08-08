@@ -90,7 +90,9 @@ paths:
       summary: Add watched route and stop
       responses:
         '200':
-          description: ok
+          description: already exists
+        '201':
+          description: created
         '400':
           description: bad request
   "/api/v1/watched_routes/delete":

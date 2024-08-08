@@ -3,6 +3,7 @@ module Api::V1
     include CityConstants
     include ApplicationValidator
     before_action :validate_city, only: [:create]
+    before_action :validate_email, only: [:get, :create, :destroy]
     
     WATCHED_LIMIT = 10
 
@@ -30,13 +31,16 @@ module Api::V1
       if WatchedBusRoute.where(email: route_params[:email]).count >= WATCHED_LIMIT
         render json: { error: 'Watched routes limit reached' }, status: :too_many_requests
       end
-      route_params[:last_notify_time] = Time.current
       watched_route = WatchedBusRoute.new(route_params)
-  
-      if watched_route.save
-        render json: { result: watched_route }, status: :created
-      else
+      
+      if !watched_route.validate
         render json: { error: watched_route.errors }, status: :bad_request
+      elsif WatchedBusRoute.find_by(route_params)
+        render json: { result: 'Already exists' }, status: :ok
+      else
+        watched_route.last_notify_time = Time.current
+        watched_route.save
+        render json: { result: watched_route }, status: :created
       end
     end
   
@@ -77,6 +81,11 @@ module Api::V1
     def validate_city
       return if valid_city? params[:city]
       render json: { error: 'Invalid city code' }, status: :bad_request
+    end
+
+    def validate_email
+      return if valid_email? params[:email]
+      render json: { error: 'Invalid email' }, status: :bad_request
     end
   
   end  

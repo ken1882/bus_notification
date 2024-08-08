@@ -1,8 +1,8 @@
 require 'mechanize'
 require 'socksify'
 
-# A singleton class with randomly grabbed internet proxies
-# that should treated unsafe. Use this to bypass IP restrictions
+# Randomly grabbed internet proxies that should treated unsafe
+# Use this to bypass IP restrictions
 module WildProxy
     ProxyCycle = (Rails.configuration.wild_proxies.dup << nil).cycle
     

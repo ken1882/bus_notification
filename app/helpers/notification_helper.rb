@@ -1,3 +1,4 @@
+# Sending notification in various types
 module NotificationHelper
 class << self
   def send_email(recipient, content, title='')
