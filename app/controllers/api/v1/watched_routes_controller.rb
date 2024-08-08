@@ -3,7 +3,9 @@ module Api::V1
     include CityConstants
     include ApplicationValidator
     before_action :validate_city, only: [:create]
-  
+    
+    WATCHED_LIMIT = 10
+
     # called by scheduler
     def self.update_bus_live
       registered_routes = WatchedBusRoute.distinct.pluck(:city, :route_name)
@@ -25,6 +27,9 @@ module Api::V1
     # Add a new watched route
     def create
       route_params = create_params
+      if WatchedBusRoute.where(email: route_params[:email]).count >= WATCHED_LIMIT
+        render json: {error: 'Watched routes limit reached'}, status: :too_many_requests
+      end
       route_params[:last_notify_time] = Time.current
       watched_route = WatchedBusRoute.new(route_params)
   

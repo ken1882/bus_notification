@@ -19,42 +19,42 @@ services:
     env_file:
       - .env
 
-  web:
-    image: bustracker
-    ports:
-      - "3000:3000"
-    depends_on:
-      - db
-      - redis
-    env_file:
-      - .env
-    environment:
-      DATABASE_HOST: db
-      REDIS_URL: redis://redis:6379/1
+  # web:
+  #   image: bustracker
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DB_HOST: db
+  #     REDIS_URL: redis://redis:6379/1
   
-  cron-worker:
-    image: bustracker
-    command: whenever -w --set environment=development
-    depends_on:
-      - db
-      - redis
-    env_file:
-      - .env
-    environment:
-      DATABASE_HOST: db
-      REDIS_URL: redis://redis:6379/1
+  # cron-worker:
+  #   image: bustracker
+  #   command: bundle exec whenever -w --set environment=development
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DB_HOST: db
+  #     REDIS_URL: redis://redis:6379/1
 
-  resque_worker:
-    image: bustracker
-    command: bundle exec env rake resque:workers QUEUE='*' COUNT='4'
-    depends_on:
-      - db
-      - redis
-    env_file:
-      - .env
-    environment:
-      DATABASE_HOST: db
-      REDIS_URL: redis://redis:6379/1
+  # resque_worker:
+  #   image: bustracker
+  #   command: bundle exec env rake resque:workers QUEUE='*' COUNT='4'
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     DB_HOST: db
+  #     REDIS_URL: redis://redis:6379/1
 
 volumes:
   postgres-data:

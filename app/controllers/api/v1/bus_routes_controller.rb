@@ -14,7 +14,8 @@ module Api::V1
     # GET /bus_routes/:city
     # shows all routes and stops info of given city
     def show
-      cache_key = "bus_routes_show_#{params[:city]}"
+      page = params[:page].to_i
+      cache_key = "bus_routes_show_#{params[:city]}_#{page}"
       @bus_route = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
         TdxApi.new.get_city_routes params[:city]
       end

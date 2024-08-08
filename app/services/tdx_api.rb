@@ -17,7 +17,9 @@ class TdxApi < Mechanize
 
   # will add in url query string
   DEFALT_ODATA_PARAM = {
-    '$format' => 'JSON'
+    '$format' => 'JSON',
+    '$top' => 500,
+    '$skip' => 0,
   }
   
   AUTH_ENABLED = !!ENV['TDX_CLIENT_ID']
@@ -119,14 +121,18 @@ class TdxApi < Mechanize
     end
   end
 
-  def get_city_routes(city)
-    response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/Route/City/#{city}")
+  def get_city_routes(city, page=0)
+    odat = DEFALT_ODATA_PARAM.dup
+    odat['$skip'] = odat['$top'] * page
+    response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/Route/City/#{city}", odata: odat)
     return nil unless response
     return JSON.parse(response.content)
   end
 
-  def get_live_route(city, route_name)
-    response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/EstimatedTimeOfArrival/City/#{city}/#{route_name}")
+  def get_live_route(city, route_name, page=0)
+    odat = DEFALT_ODATA_PARAM.dup
+    odat['$skip'] = odat['$top'] * page
+    response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/EstimatedTimeOfArrival/City/#{city}/#{route_name}", odata: odat)
     return nil unless response
     return JSON.parse(response.content)
   end
