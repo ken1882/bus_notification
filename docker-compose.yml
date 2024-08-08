@@ -1,5 +1,5 @@
 version: '3.8'
-
+# ports are exposed for easier debug, don't use in actual producation
 services:
   db:
     image: postgres:16.2
@@ -23,6 +23,18 @@ services:
     image: bustracker
     ports:
       - "3000:3000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      DATABASE_HOST: db
+      REDIS_URL: redis://redis:6379/1
+  
+  cron-worker:
+    image: bustracker
+    command: whenever -w --set environment=development
     depends_on:
       - db
       - redis

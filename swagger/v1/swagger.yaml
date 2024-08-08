@@ -1,0 +1,127 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/api/v1/bus_routes":
+    get:
+      summary: List cities available for bus routes
+      responses:
+        '200':
+          description: ok
+  "/api/v1/bus_routes/{city}":
+    parameters:
+    - name: city
+      in: path
+      description: city name in English
+      required: true
+      schema:
+        type: string
+    get:
+      summary: shows all routes and stops info of given city
+      responses:
+        '200':
+          description: ok
+  "/api/v1/bus_routes/{city}/routes/{route_name}":
+    parameters:
+    - name: city
+      in: path
+      description: city name in English
+      required: true
+      schema:
+        type: string
+    - name: route_name
+      in: path
+      description: city name in Zh_tw
+      required: true
+      schema:
+        type: string
+    get:
+      summary: Get live status of given city and bus route
+      responses:
+        '200':
+          description: ok
+  "/api/v1/watched_routes/get":
+    parameters:
+    - name: email
+      in: body
+      schema:
+        type: object
+        properties:
+          email:
+            type: string
+        required:
+        - email
+    post:
+      summary: Get list of watched routes
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: bad request
+  "/api/v1/watched_routes/add":
+    parameters:
+    - name: watch_route
+      in: body
+      schema:
+        type: object
+        properties:
+          email:
+            type: string
+          city:
+            type: string
+          route_id:
+            type: string
+          route_name:
+            type: string
+          direction:
+            type: integer
+          alert_stop_id:
+            type: string
+        required:
+        - email
+        - city
+        - route_id
+        - route_name
+        - direction
+        - alert_stop_id
+    post:
+      summary: Add watched route and stop
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: bad request
+  "/api/v1/watched_routes/delete":
+    parameters:
+    - name: delete_route
+      in: body
+      schema:
+        type: object
+        properties:
+          email:
+            type: string
+          city:
+            type: string
+          route_id:
+            type: string
+          alert_stop_id:
+            type: string
+        required:
+        - email
+        - city
+        - route_id
+        - alert_stop_id
+    delete:
+      summary: Delete a watched route
+      responses:
+        '200':
+          description: ok
+        '400':
+          description: bad request
+servers:
+- url: https://{defaultHost}
+  variables:
+    defaultHost:
+      default: www.example.com

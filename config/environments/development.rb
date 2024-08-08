@@ -61,6 +61,10 @@ Rails.application.configure do
   # Highlight code that enqueued background job in logs.
   config.active_job.verbose_enqueue_logs = true
 
+  config.logger = Logger.new("log/rails_dev.log").tap do |logger|
+    logger.level = Logger::DEBUG
+    logger.formatter = ::Logger::Formatter.new
+  end
 
   # Raises error for missing translations.
   # config.i18n.raise_on_missing_translations = true
@@ -75,4 +79,16 @@ Rails.application.configure do
   config.action_controller.raise_on_missing_callback_actions = true
 
   config.cache_store = :redis_cache_store, { url: ENV['REDIS_URL'] }
+
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    address: ENV['SMTP_HOST'],
+    port: ENV['SMTP_PORT'],
+    domain: ENV['SMTP_DOMAIN'],
+    user_name: ENV['SMTP_USERNAME'],
+    password: ENV['SMTP_PASSWORD'],
+    authentication: "plain",
+    enable_starttls_auto: true
+  }
+  config.action_mailer.raise_delivery_errors = true
 end

@@ -1,24 +1,11 @@
-# README
+# Bus Tracker
+Simple bus tracker api service using TDX api.
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Use `docker-compose up` with supplied .env to start server.
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+* Memos
+    * Start resque worker: `bundle exec env rake resque:workers QUEUE='*' COUNT='4'`
+    * Whenever (cron job): `whenever . --set environment=development`
+    * Swagger
+        * Generate controller template `rails generate rspec:swagger MyController`
+        * Generate doc `rake rswag`

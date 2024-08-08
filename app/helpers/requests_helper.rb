@@ -24,8 +24,8 @@ module RequestsHelper
             yield # execute given block
         rescue Mechanize::ResponseCodeError => e
             depth += 1
-            return e if depth > retry_times
-            return e unless RETRYABLE_CODES.include? e.response_code
+            raise e if depth > retry_times
+            raise e unless RETRYABLE_CODES.include? e.response_code
             fallback_proc.call(e, depth)
             retry
         rescue *RETRYABLE_ERRORS => e

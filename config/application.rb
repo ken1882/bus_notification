@@ -40,6 +40,7 @@ module BusNotification
     # config.eager_load_paths << Rails.root.join("extras")
     config.time_zone = "Asia/Taipei"
     config.autoload_paths += %W(#{config.root}/app/services)
+    config.autoload_paths += %W(#{config.root}/app/validators)
     config.wild_proxies = config_for(:wildproxies)
     config.x.default_worker_cnt = 4
 

@@ -80,10 +80,6 @@ class TdxApi < Mechanize
     )
     self.request_headers = ori_headers
     begin
-      File.open('log/tmp.log') do |fp|
-        fp.write("Response:\n#{response.body}") rescue nil
-        fp.write("Response:\n#{response.page}") rescue nil
-      end
       return JSON.parse(response.content)
     rescue Exception => e
       Rails.logger.error("Error processing auth (#{e}).Response:\n#{response}")
@@ -110,16 +106,28 @@ class TdxApi < Mechanize
       args[0] += '?' + odata_params.map{|k,v| "#{m.call k}=#{m.call v}"}.join('&')
     end
     # return send result
-    start_requests(fallback){ self.send(method, *args, **kwargs) }
+    start_requests(fallback) do
+      begin
+        self.send(method, *args, **kwargs)
+      rescue Mechanize::ResponseCodeError => e
+        msg = "Requests failed: #{e}\n"
+        msg += e.page.content if e.respond_to? :page
+        msg += e.content if e.respond_to? :content
+        Rails.logger.debug(msg)
+        return nil
+      end
+    end
   end
 
   def get_city_routes(city)
     response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/Route/City/#{city}")
+    return nil unless response
     return JSON.parse(response.content)
   end
 
   def get_live_route(city, route_name)
     response = do_requests(:get, "#{HOST}/api/basic/v2/Bus/EstimatedTimeOfArrival/City/#{city}/#{route_name}")
+    return nil unless response
     return JSON.parse(response.content)
   end
 

@@ -6,6 +6,7 @@ class WatchedBusRouteTest < ActiveSupport::TestCase
     generate_data
   end
 
+  # 3rd-api should be mocked
   def generate_data(cnt=4)
     attr_generator = {
       :email => Proc.new{SecureRandom.alphanumeric(8).downcase+'@kimo.com'},
@@ -27,6 +28,7 @@ class WatchedBusRouteTest < ActiveSupport::TestCase
       WatchedBusRoute.create(fields)
     end
   end
+  
   # test "the truth" do
   #   assert true
   # end

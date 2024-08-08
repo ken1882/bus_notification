@@ -18,6 +18,8 @@ gem 'dotenv-rails'
 gem "mechanize"
 gem "brotli"
 gem "socksify"
+gem 'rspec-rails'
+gem 'rswag'
 
 group :development, :test do
   gem "debug"
