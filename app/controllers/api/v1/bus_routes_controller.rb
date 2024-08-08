@@ -8,7 +8,7 @@ module Api::V1
     # GET /bus_routes
     # shows all available city
     def index
-      render json: CityConstants::CITIES
+      render json: { result: CityConstants::CITIES }
     end
   
     # GET /bus_routes/:city
@@ -20,7 +20,9 @@ module Api::V1
         TdxApi.new.get_city_routes params[:city], page
       end
       render json: { error: 'Invalid parameter' }, status: :bad_request if @bus_route.nil?
-      render json: @bus_route
+      has_more = @bus_route.size == TdxApi::DEFALT_ODATA_PARAM['$top']
+      @bus_route.pop if has_more
+      render json: { result: @bus_route, has_more: has_more}
     end
   
     # GET /bus_routes/:city/routes/:route_name
@@ -32,7 +34,9 @@ module Api::V1
         TdxApi.new.get_live_route params[:city], params[:route_name], page
       end
       render json: { error: 'Invalid parameter' }, status: :bad_request if @realtime_route.nil?
-      render json: @realtime_route
+      has_more = @realtime_route.size == TdxApi::DEFALT_ODATA_PARAM['$top']
+      @realtime_route.pop if has_more
+      render json: { result: @realtime_route, has_more: has_more}
     end
   
     private

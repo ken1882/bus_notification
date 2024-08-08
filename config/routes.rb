@@ -7,7 +7,7 @@ Rails.application.routes.draw do
       scope :bus_routes do
         get '/', to: 'bus_routes#index'
         get '/:city', to: 'bus_routes#show'
-        get '/:city/routes/:route_id', to: 'bus_routes#route_show'
+        get '/:city/routes/:route_name', to: 'bus_routes#route_show'
       end
   
       scope :watched_routes do

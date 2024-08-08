@@ -18,7 +18,7 @@ class TdxApi < Mechanize
   # will add in url query string
   DEFALT_ODATA_PARAM = {
     '$format' => 'JSON',
-    '$top' => 500,
+    '$top' => 100 + 1, # detect whether has_more
     '$skip' => 0,
   }
   

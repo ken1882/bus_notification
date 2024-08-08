@@ -20,7 +20,7 @@ module Api::V1
     def get
       email = get_params[:email]
       watched_routes = WatchedBusRoute.where(email: email)
-      render json: watched_routes
+      render json: { result: watched_routes }
     end
   
     # POST /watched_routes/add
@@ -28,15 +28,15 @@ module Api::V1
     def create
       route_params = create_params
       if WatchedBusRoute.where(email: route_params[:email]).count >= WATCHED_LIMIT
-        render json: {error: 'Watched routes limit reached'}, status: :too_many_requests
+        render json: { error: 'Watched routes limit reached' }, status: :too_many_requests
       end
       route_params[:last_notify_time] = Time.current
       watched_route = WatchedBusRoute.new(route_params)
   
       if watched_route.save
-        render json: watched_route, status: :created
+        render json: { result: watched_route }, status: :created
       else
-        render json: watched_route.errors, status: :bad_request
+        render json: { error: watched_route.errors }, status: :bad_request
       end
     end
   
