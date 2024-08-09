@@ -48,7 +48,7 @@ services:
       DB_HOST: db
       REDIS_URL: redis://redis:6379/1
 
-  resque_worker:
+  resque-worker:
     image: bustracker
     command: bundle exec env rake resque:workers QUEUE='*' COUNT='4'
     restart: always
@@ -61,7 +61,7 @@ services:
       DB_HOST: db
       REDIS_URL: redis://redis:6379/1
   
-  resque_mailer:
+  resque-mailer:
     image: bustracker
     command: bundle exec env rake resque:workers QUEUE='bus_notification_mailer' COUNT='2'
     restart: always
