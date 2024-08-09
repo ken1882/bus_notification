@@ -18,8 +18,10 @@ RSpec.describe 'bus_routes', type: :request do
     end
   end
 
-  path '/api/v1/bus_routes/{city}' do
+  path '/api/v1/bus_routes/{city}?{page}' do
     parameter name: 'city', in: :path, type: :string, description: 'city name in English'
+    parameter name: 'page', in: :query, type: :integer, description: 'Page number, each result capped 100 entries'
+    
     get('shows all routes and stops info of given city') do
       response(200, 'ok') do
         let(:city) { 'Taipei' }
@@ -36,9 +38,10 @@ RSpec.describe 'bus_routes', type: :request do
     end
   end
 
-  path '/api/v1/bus_routes/{city}/routes/{route_name}' do
+  path '/api/v1/bus_routes/{city}/routes/{route_name}?{page}' do
     parameter name: 'city', in: :path, type: :string, description: 'city name in English'
     parameter name: 'route_name', in: :path, type: :string, description: 'city name in Zh_tw'
+    parameter name: 'page', in: :query, type: :integer, description: 'Page number, each result capped 100 entries'
     
     get('Get live status of given city and bus route') do
       response(200, 'ok') do

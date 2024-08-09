@@ -10,7 +10,7 @@ paths:
       responses:
         '200':
           description: ok
-  "/api/v1/bus_routes/{city}":
+  "/api/v1/bus_routes/{city}?{page}":
     parameters:
     - name: city
       in: path
@@ -18,12 +18,17 @@ paths:
       required: true
       schema:
         type: string
+    - name: page
+      in: query
+      description: Page number, each result capped 100 entries
+      schema:
+        type: integer
     get:
       summary: shows all routes and stops info of given city
       responses:
         '200':
           description: ok
-  "/api/v1/bus_routes/{city}/routes/{route_name}":
+  "/api/v1/bus_routes/{city}/routes/{route_name}?{page}":
     parameters:
     - name: city
       in: path
@@ -37,6 +42,11 @@ paths:
       required: true
       schema:
         type: string
+    - name: page
+      in: query
+      description: Page number, each result capped 100 entries
+      schema:
+        type: integer
     get:
       summary: Get live status of given city and bus route
       responses:
@@ -108,12 +118,15 @@ paths:
             type: string
           route_id:
             type: string
+          direction:
+            type: integer
           alert_stop_id:
             type: string
         required:
         - email
         - city
         - route_id
+        - direction
         - alert_stop_id
     delete:
       summary: Delete a watched route
@@ -122,8 +135,11 @@ paths:
           description: ok
         '400':
           description: bad request
+        '404':
+          description: not found
 servers:
-- url: https://{defaultHost}
+- url: http://{defaultHost}
   variables:
     defaultHost:
-      default: www.example.com
+      default: localhost:3000
+

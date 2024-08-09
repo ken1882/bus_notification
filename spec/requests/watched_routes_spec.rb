@@ -105,6 +105,10 @@ RSpec.describe 'watched_routes', type: :request do
       response(400, 'bad request') do 
         run_test!
       end
+
+      response(404, 'not found') do 
+        run_test!
+      end
     end
   end
 end
