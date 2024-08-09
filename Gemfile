@@ -18,6 +18,7 @@ gem 'dotenv-rails'
 gem "mechanize"
 gem "brotli"
 gem "socksify"
+gem 'rails_param'
 gem 'rspec-rails'
 gem 'rswag'
 

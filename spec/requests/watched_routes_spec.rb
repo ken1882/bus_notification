@@ -84,9 +84,10 @@ RSpec.describe 'watched_routes', type: :request do
           email: { type: :string },
           city: { type: :string },
           route_id: { type: :string },
+          direction: { type: :integer },
           alert_stop_id: { type: :string },
         },
-        required: %w(email city route_id alert_stop_id)
+        required: %w(email city route_id direction alert_stop_id)
       }
     )
     

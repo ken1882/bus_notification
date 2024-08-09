@@ -5,6 +5,7 @@ module Api::V1
     before_action :validate_city, only: [:create]
     before_action :validate_email, only: [:get, :create, :destroy]
     before_action :check_email_exists, only: [:create]
+    before_action :validate_delete_params, only: [:destroy]
     
     WATCHED_LIMIT = 10
 
@@ -74,7 +75,7 @@ module Api::V1
     end
   
     def delete_params
-      params.permit(:email, :route_id, :direction, :alert_stop_id)
+      params.permit(:email, :city, :route_id, :direction, :alert_stop_id)
     end
     
     def validate_city
@@ -90,6 +91,18 @@ module Api::V1
     def check_email_exists
       return if EmailChecker.new.check(params[:email])
       render json: { error: 'Email unreachable, is this your actual email address?' }, status: :bad_request
+    end
+
+    def validate_delete_params
+      begin
+        param! :email, String, required: true
+        param! :city, String, required: true
+        param! :route_id, String, required: true
+        param! :direction, Integer, required: true
+        param! :alert_stop_id, String, required: true
+      rescue RailsParam::InvalidParameterError => e
+        render json: { error: e.message }, status: :bad_request
+      end
     end
 
   end  
