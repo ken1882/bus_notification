@@ -1,8 +1,9 @@
 # Bus Tracker
-Simple bus tracker api service using TDX api.
+Simple bus tracker api service via TDX.
 
 Build image first with `docker build . -t bustracker`,
 then use `docker-compose up` with supplied .env to start local server.
+Note that SMTP server does not include in `docker-compose`.
 
 Swagger api document available at `/swagger`
 
