@@ -1,8 +1,8 @@
 # Bus Tracker
 Simple bus tracker api service via TDX.
 
-Build image first with `docker build . -t bustracker`,
-then use `docker-compose up` with supplied .env to start local server.
+Build image first with `docker build . -t bustracker`,<br>
+then use `docker-compose up` with supplied .env to start local server.<br>
 Note that SMTP server does not include in `docker-compose`.
 
 Swagger api document available at `/swagger`
@@ -25,7 +25,7 @@ Swagger api document available at `/swagger`
 
 ### Memos
 * Start resque worker: `bundle exec env rake resque:workers QUEUE='*' COUNT='4'`
-* Whenever (cron job): `whenever . --set environment=development`
+* Whenever view cron syntax: `whenever . --set environment=development`
 * Swagger
     * Generate controller template: `rails generate rspec:swagger MyController`
     * Generate doc: `rake rswag`
