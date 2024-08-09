@@ -18,7 +18,7 @@ module RequestsHelper
     # @param fallback_proc [Proc] A Proc to call after a retryable failure.
     #   The proc will be called as `proc.call(error, depth_count)`.
     # @param retry_times [Integer] Max number of times to retry.
-    def start_requests(fallback_proc, retry_times=5)
+    def start_requests(fallback_proc=nil, retry_times=5)
         depth = 0
         begin
             yield # execute given block
@@ -26,7 +26,7 @@ module RequestsHelper
             depth += 1
             raise e if depth > retry_times
             raise e unless RETRYABLE_CODES.include? e.response_code
-            fallback_proc.call(e, depth)
+            fallback_proc.call(e, depth) if fallback_proc
             retry
         rescue *RETRYABLE_ERRORS => e
             @_last_error = e

@@ -4,6 +4,7 @@ module Api::V1
     include ApplicationValidator
     before_action :validate_city, only: [:create]
     before_action :validate_email, only: [:get, :create, :destroy]
+    before_action :check_email_exists, only: [:create]
     
     WATCHED_LIMIT = 10
 
@@ -32,7 +33,7 @@ module Api::V1
         render json: { error: 'Watched routes limit reached' }, status: :too_many_requests
       end
       watched_route = WatchedBusRoute.new(route_params)
-      
+
       if !watched_route.validate
         render json: { error: watched_route.errors }, status: :bad_request
       elsif WatchedBusRoute.find_by(route_params)
@@ -47,12 +48,10 @@ module Api::V1
     # DELETE /watched_routes/remove
     # Remove a watched route
     def destroy
-      route_params = delete_params
-      watched_route = WatchedBusRoute.find_by(email: route_params[:email], route_id: route_params[:route_id])
-  
+      watched_route = WatchedBusRoute.find_by(delete_params)
       if watched_route
         watched_route.destroy
-        head :no_content
+        render json: { result: 'Deleted' }, status: :ok
       else
         render json: { error: 'Watched route not found' }, status: :not_found
       end
@@ -75,7 +74,7 @@ module Api::V1
     end
   
     def delete_params
-      params.permit(:email, :destroy)
+      params.permit(:email, :route_id, :direction, :alert_stop_id)
     end
     
     def validate_city
@@ -87,6 +86,11 @@ module Api::V1
       return if valid_email? params[:email]
       render json: { error: 'Invalid email' }, status: :bad_request
     end
-  
+    
+    def check_email_exists
+      return if EmailChecker.new.check(params[:email])
+      render json: { error: 'Email unreachable, is this your actual email address?' }, status: :bad_request
+    end
+
   end  
 end
