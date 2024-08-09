@@ -3,6 +3,7 @@ version: '3.8'
 services:
   db:
     image: postgres:16.2
+    restart: always
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
@@ -12,6 +13,7 @@ services:
 
   redis:
     image: redis:6.0.20
+    restart: always
     volumes:
       - redis-data:/data
     ports:
@@ -19,42 +21,58 @@ services:
     env_file:
       - .env
 
-  # web:
-  #   image: bustracker
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     DB_HOST: db
-  #     REDIS_URL: redis://redis:6379/1
+  web:
+    image: bustracker
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      REDIS_URL: redis://redis:6379/1
   
-  # cron-worker:
-  #   image: bustracker
-  #   command: bundle exec whenever -w --set environment=development
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     DB_HOST: db
-  #     REDIS_URL: redis://redis:6379/1
+  cron-worker:
+    image: bustracker
+    command: bash run-cron.sh
+    restart: always
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      REDIS_URL: redis://redis:6379/1
 
-  # resque_worker:
-  #   image: bustracker
-  #   command: bundle exec env rake resque:workers QUEUE='*' COUNT='4'
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     DB_HOST: db
-  #     REDIS_URL: redis://redis:6379/1
+  resque_worker:
+    image: bustracker
+    command: bundle exec env rake resque:workers QUEUE='*' COUNT='4'
+    restart: always
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      REDIS_URL: redis://redis:6379/1
+  
+  resque_mailer:
+    image: bustracker
+    command: bundle exec env rake resque:workers QUEUE='bus_notification_mailer' COUNT='2'
+    restart: always
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      REDIS_URL: redis://redis:6379/1
 
 volumes:
   postgres-data:

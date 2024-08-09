@@ -2,7 +2,6 @@ module Api::V1
   class BusRoutesController < ApplicationController
     include CityConstants
     include ApplicationValidator
-  
     before_action :validate_city, only: [:show, :route_show]
   
     # GET /bus_routes
@@ -42,6 +41,7 @@ module Api::V1
     private
   
     def validate_city
+      p params
       return if valid_city? params[:city]
       render json: { error: 'Invalid city code' }, status: :bad_request
     end

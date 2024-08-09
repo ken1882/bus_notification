@@ -98,5 +98,6 @@ Rails.application.configure do
     authentication: "plain",
     enable_starttls_auto: true
   }
+  config.action_mailer.deliver_later_queue_name = 'notification_mailer'
 end
 

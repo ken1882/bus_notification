@@ -10,17 +10,15 @@ WORKDIR /rails
 # Set production environment
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_PATH="/usr/local/bundle"
 
 
 # Throw-away build stage to reduce size of final image
 FROM base as build
 
 # Install packages needed to build gems
-RUN apt-get update && \
-    apt-get install -y build-essential git libvips pkg-config libpq-dev \
-    nano iputils-ping net-tools dnsutils
+RUN apt update && \
+    apt install -y build-essential git libvips pkg-config libpq-dev
 
 # Install application gems
 COPY Gemfile Gemfile.lock ./
@@ -39,8 +37,8 @@ RUN bundle exec bootsnap precompile app/ lib/
 FROM base
 
 # Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libsqlite3-0 libvips && \
+RUN apt update && \
+    apt install -y curl libsqlite3-0 libvips libpq-dev cron nano && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Copy built artifacts: gems, application
@@ -48,9 +46,9 @@ COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /rails /rails
 
 # Run and own only the runtime files as a non-root user for security
-RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
+# RUN useradd rails --create-home --shell /bin/bash && \
+#     chown -R rails:rails db log storage tmp
+# USER rails:rails
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000

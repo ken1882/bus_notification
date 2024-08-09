@@ -92,4 +92,5 @@ Rails.application.configure do
     enable_starttls_auto: true
   }
   config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.deliver_later_queue_name = 'bus_notification_mailer'
 end
