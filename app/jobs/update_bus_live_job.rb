@@ -7,12 +7,21 @@ class UpdateBusLiveJob < ApplicationJob
 
   def perform(*args)
     city, route_name = args.flatten
-    cache_key = "bus_routes_show_#{city}_#{route_name}"
-    @realtime_route = Rails.cache.fetch(cache_key, expires_in: 1.minute) do
-      TdxApi.new.get_live_route(city, route_name)
+    has_more, page = true, 0
+    @realtime_routes = []
+    @agent = TdxApi.new
+    while has_more
+      cache_key = "bus_routes_show_#{city}_#{route_name}@#{page}"
+      routes = Rails.cache.fetch(cache_key, expires_in: 1.minute) do
+        @agent.get_live_route(city, route_name, page)
+      end
+      page += 1
+      has_more = routes.size == TdxApi::DEFALT_ODATA_PARAM['$top']
+      routes.pop if has_more
+      @realtime_routes += routes
     end
     # iterate through routes and sending matching watched routes
-    @realtime_route.each do |route|
+    @realtime_routes.each do |route|
       next if route['StopStatus'] != StopStatus[:normal]
       next if !route['EstimateTime'] || route['EstimateTime'] > ALERT_SECONDS_THRESHOLD
       Rails.logger.debug("Notify incoming bus: #{city} #{route_name} #{route['StopName']['Zh_tw']}(#{route['Direction']} #{route['StopID']})")
